@@ -1,0 +1,33 @@
+#!/bin/bash
+# Run Claude Code from Docker in the current working directory
+
+WORK_ROOT="$HOME/work"
+
+# Check current directory is under WORK_ROOT
+if [[ "$PWD" != "$WORK_ROOT"* ]]; then
+  echo "Error: must be run from within $WORK_ROOT" >&2
+  exit 1
+fi
+
+# Determine entrypoint based on script name
+case "$(basename "$0")" in
+  claude-docker-npx) CMD=(--entrypoint npx) ;;
+  claude-docker-bash) CMD=(--entrypoint bash) ;;
+  *) CMD=() ; set -- claude "$@" ;;
+esac
+
+docker run -it --security-opt no-new-privileges \
+  --user "$(id -u):$(id -g)" \
+  -e HOME="$HOME" \
+  -w "$PWD" \
+  -v "$WORK_ROOT:$WORK_ROOT" \
+  -v "$HOME/.claude:$HOME/.claude" \
+  -v "$HOME/.claude.json:$HOME/.claude.json" \
+  -v "$HOME/.config/ccstatusline:$HOME/.config/ccstatusline" \
+  -v "/run/user/$(id -u)/bus:/run/user/$(id -u)/bus" \
+  -e "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus" \
+  -v "$HOME/.cache/ccache:$HOME/.cache/ccache" \
+  -v /usr:/usr:ro \
+  -v /etc/alternatives:/etc/alternatives:ro \
+  -e CCACHE_PATH="/usr/bin" \
+  "${CMD[@]}" claude-docker "$@"
