@@ -6,33 +6,45 @@ Run [Claude Code](https://claude.ai) inside a Docker container with access to yo
 
 - Isolates Claude Code from your host system (`--security-opt no-new-privileges`)
 - Mounts host `/usr` ro so Claude can use your compilers, tools, and libraries
-- Shares Claude config, ccache, and D-Bus session across host and container
-- Container username matches host username — no path translation needed
+- Shares Claude config across host and container
+- Optional extras: Node.js/ccstatusline, ccache, D-Bus (via `extra-build.sh` and `config`)
 
 ## What gets mounted
 
+Always mounted by the script:
+
 | Host path | Container path | Mode | Why |
 |---|---|---|---|
-| `~/work` | `~/work` | rw | Project files Claude Code reads and edits |
+| `$WORK_ROOT` | `$WORK_ROOT` | rw | Project files Claude Code reads and edits |
 | `~/.claude` | `~/.claude` | rw | Claude Code config, memory, and project settings |
 | `~/.claude.json` | `~/.claude.json` | rw | Claude Code authentication and session state |
-| `~/.config/ccstatusline` | `~/.config/ccstatusline` | rw | Status line tool config shared with host |
-| `~/.cache/ccache` | `~/.cache/ccache` | rw | Compiler cache shared with host |
 | `/usr` | `/usr` | ro | Host compilers, libraries, and tools (gcc, make, etc.) |
-| `/etc/alternatives` | `/etc/alternatives` | ro | Debian alternatives symlinks required by `/usr` binaries |
-| D-Bus user session socket | D-Bus user session socket | rw | Desktop notifications from inside the container |
+| `/etc/alternatives` | `/etc/alternatives` | ro | Debian alternatives symlinks (auto-detected) |
 
-## Files
+The default `config.in` also mounts ccstatusline, D-Bus session socket, and ccache. See [Configuration](#configuration) to customise.
 
-| File | Purpose |
-|---|---|
-| `Dockerfile` | Debian Trixie image with Node.js 20 and Claude Code |
-| `claude-docker-build` | Build (or rebuild) the image |
-| `claude-docker` | Run Claude Code in the current directory |
+## Extra build steps
 
-## Prerequisites
+To add packages or tools to the image, copy the template and uncomment what you need:
 
-The `Dockerfile` uses `debian:trixie` as its base. If your host runs a different distribution or release, update the `FROM` line to match — this ensures the ro `/usr` mount provides compatible libraries.
+```bash
+cp extra-build.sh.in extra-build.sh
+vi extra-build.sh
+./claude-docker-build
+```
+
+For example, uncomment the Node.js lines to install Node.js 20 and ccstatusline. 
+
+## Configuration
+
+Copy the template and edit to taste:
+
+```bash
+cp config.in config
+vi config
+```
+
+`config` lets you set `WORK_ROOT` and `EXTRA_DOCKER_ARGS` (an array of extra `docker run` flags). The defaults in `config.in` include mounts for ccstatusline, D-Bus, and ccache. If no `config` file exists, `config.in` is used as-is.
 
 ## Setup
 
@@ -54,13 +66,4 @@ Run from anywhere under `~/work`:
 ```bash
 cd ~/work/my-project
 claude-docker          # starts claude
-claude-docker-bash     # starts bash (symlink claude-docker to claude-docker-bash)
-claude-docker-npx      # starts npx  (symlink claude-docker to claude-docker-npx)
-```
-
-The entrypoint is selected based on the script name. Create symlinks for the alternate modes:
-
-```bash
-ln -s claude-docker claude-docker-bash
-ln -s claude-docker claude-docker-npx
 ```

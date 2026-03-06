@@ -3,11 +3,15 @@
 #   Default:  update Claude only (fast, reuses cached OS layers)
 #   --full:   rebuild everything including Debian packages
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 USER_ARG="--build-arg USER=$(whoami)"
+BASE_IMAGE="$(. /etc/os-release && echo "$ID:$VERSION_CODENAME")"
+BASE_ARG="--build-arg BASE_IMAGE=$BASE_IMAGE"
+
+[[ -f "$SCRIPT_DIR/extra-build.sh" ]] || printf '#!/bin/bash\n' > "$SCRIPT_DIR/extra-build.sh"
 
 if [[ "$1" == "--full" ]]; then
-  docker build --no-cache $USER_ARG -t claude-docker "$SCRIPT_DIR"
+  docker build --no-cache $USER_ARG $BASE_ARG -t claude-docker "$SCRIPT_DIR"
 else
-  docker build --build-arg CLAUDE_VERSION="$(date +%s)" $USER_ARG -t claude-docker "$SCRIPT_DIR"
+  docker build --build-arg CLAUDE_VERSION="$(date +%s)" $USER_ARG $BASE_ARG -t claude-docker "$SCRIPT_DIR"
 fi

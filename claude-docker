@@ -1,7 +1,8 @@
 #!/bin/bash
 # Run Claude Code from Docker in the current working directory
 
-WORK_ROOT="$HOME/work"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+source "$SCRIPT_DIR/config" 2>/dev/null || source "$SCRIPT_DIR/config.in"
 
 # Check current directory is under WORK_ROOT
 if [[ "$PWD" != "$WORK_ROOT"* ]]; then
@@ -16,6 +17,10 @@ case "$(basename "$0")" in
   *) CMD=() ; set -- claude "$@" ;;
 esac
 
+# Mount /etc/alternatives if it exists (Debian/Ubuntu symlinks used by /usr binaries)
+ALTERNATIVES=()
+[[ -d /etc/alternatives ]] && ALTERNATIVES=(-v /etc/alternatives:/etc/alternatives:ro)
+
 docker run -it --security-opt no-new-privileges \
   --user "$(id -u):$(id -g)" \
   -e HOME="$HOME" \
@@ -23,11 +28,7 @@ docker run -it --security-opt no-new-privileges \
   -v "$WORK_ROOT:$WORK_ROOT" \
   -v "$HOME/.claude:$HOME/.claude" \
   -v "$HOME/.claude.json:$HOME/.claude.json" \
-  -v "$HOME/.config/ccstatusline:$HOME/.config/ccstatusline" \
-  -v "/run/user/$(id -u)/bus:/run/user/$(id -u)/bus" \
-  -e "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus" \
-  -v "$HOME/.cache/ccache:$HOME/.cache/ccache" \
   -v /usr:/usr:ro \
-  -v /etc/alternatives:/etc/alternatives:ro \
-  -e CCACHE_PATH="/usr/bin" \
+  "${ALTERNATIVES[@]}" \
+  "${EXTRA_DOCKER_ARGS[@]}" \
   "${CMD[@]}" claude-docker "$@"

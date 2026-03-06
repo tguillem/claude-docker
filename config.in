@@ -1,0 +1,21 @@
+# Copy this file to 'config' and edit
+# 'config' is gitignored
+
+# Root directory that gets mounted read-write into the container.
+# claude-docker refuses to run outside this path.
+WORK_ROOT="$HOME/work"
+
+# Extra arguments passed to 'docker run'.
+# Add or remove -v (mounts) and -e (env vars) to suit your setup.
+EXTRA_DOCKER_ARGS=(
+  # ccstatusline: share tmux/screen status bar config with host
+  # -v "$HOME/.config/ccstatusline:$HOME/.config/ccstatusline"
+
+  # D-Bus: forward the user session bus so the container can send desktop notifications
+  # -v "/run/user/$(id -u)/bus:/run/user/$(id -u)/bus"
+  # -e "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus"
+
+  # ccache: share compiler cache with host to speed up rebuilds
+  # -v "$HOME/.cache/ccache:$HOME/.cache/ccache"
+  # -e CCACHE_PATH="/usr/bin"
+)
