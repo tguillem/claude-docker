@@ -12,8 +12,11 @@ RUN if command -v apt-get >/dev/null; then \
     fi
 
 ARG USER
+ARG UID=1000
 RUN test -n "$USER" || { echo "ERROR: USER build arg is required"; exit 1; } && \
-    useradd -m -s /bin/bash $USER && \
+    existing=$(getent passwd $UID | cut -d: -f1 || true) && \
+    if [ -n "$existing" ] && [ "$existing" != "$USER" ]; then userdel "$existing"; fi && \
+    useradd -m -s /bin/bash -u $UID $USER && \
     mkdir -p /home/$USER/.claude /home/$USER/.local/bin /home/$USER/.config && \
     chown $USER:$USER /home/$USER/.claude /home/$USER/.local /home/$USER/.local/bin /home/$USER/.config
 

@@ -4,7 +4,7 @@
 #   --full:   rebuild everything including Debian packages
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-USER_ARG="--build-arg USER=$(whoami)"
+USER_ARG="--build-arg USER=$(whoami) --build-arg UID=$(id -u)"
 BASE_IMAGE="$(. /etc/os-release && echo "$ID:$VERSION_CODENAME")"
 BASE_ARG="--build-arg BASE_IMAGE=$BASE_IMAGE"
 
