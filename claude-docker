@@ -21,6 +21,10 @@ esac
 ALTERNATIVES=()
 [[ -d /etc/alternatives ]] && ALTERNATIVES=(-v /etc/alternatives:/etc/alternatives:ro)
 
+# Ensure mount targets exist so Docker doesn't create them as root-owned directories
+[[ -d "$HOME/.claude" ]] || mkdir -p "$HOME/.claude"
+[[ -f "$HOME/.claude.json" ]] || touch "$HOME/.claude.json"
+
 docker run -it --security-opt no-new-privileges \
   --user "$(id -u):$(id -g)" \
   -e HOME="$HOME" \
