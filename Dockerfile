@@ -30,4 +30,11 @@ ENV PATH=/home/$USER/.local/bin:/opt/node/bin:$PATH
 ARG CLAUDE_VERSION=1
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
+# Install Codex into a baked, non-mounted dir (CODEX_HOME set inline, NOT via ENV):
+# the runtime ~/.codex mount would otherwise shadow the binary that the installer
+# places under $CODEX_HOME/packages/standalone. At runtime CODEX_HOME is unset, so it
+# defaults to the mounted ~/.codex for config/auth while the binary stays baked here.
+ARG CODEX_VERSION=1
+RUN curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_HOME=$HOME/.local/share/codex CODEX_NON_INTERACTIVE=1 sh
+
 CMD ["claude"]

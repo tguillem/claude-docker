@@ -1,10 +1,10 @@
 # claude-docker
 
-Run [Claude Code](https://claude.ai) inside a Docker container with access to your host toolchain and working directory.
+Run [Claude Code](https://claude.ai) and [OpenAI Codex](https://developers.openai.com/codex) inside a Docker container with access to your host toolchain and working directory.
 
 ## Overview
 
-- Isolates Claude Code from your host system (`--security-opt no-new-privileges`)
+- Isolates Claude Code and Codex from your host system (`--security-opt no-new-privileges`)
 - Mounts host `/usr` ro so Claude can use your compilers, tools, and libraries
 - Shares Claude config across host and container
 - Optional extras: Node.js/ccstatusline, ccache, D-Bus (via `extra-build.sh` and `config`)
@@ -18,6 +18,7 @@ Always mounted by the script:
 | `$WORK_ROOT` | `$WORK_ROOT` | rw | Project files Claude Code reads and edits |
 | `~/.claude` | `~/.claude` | rw | Claude Code config, memory, and project settings |
 | `~/.claude.json` | `~/.claude.json` | rw | Claude Code authentication and session state |
+| `~/.codex` | `~/.codex` | rw | Codex config (`config.toml`) and authentication (`auth.json`) |
 | `/usr` | `/usr` | ro | Host compilers, libraries, and tools (gcc, make, etc.) |
 | `/etc/alternatives` | `/etc/alternatives` | ro | Debian alternatives symlinks (auto-detected) |
 
@@ -65,5 +66,28 @@ Run from anywhere under `~/work`:
 
 ```bash
 cd ~/work/my-project
-claude-docker          # starts claude
+claude-docker          # starts Claude Code
+codex-docker           # starts OpenAI Codex
+claude-docker-bash     # drops into a shell in the container
+claude-docker-npx ...  # runs npx in the container
 ```
+
+Claude and Codex share a single image. The launcher behaviour is selected by the name it's
+invoked as — `codex-docker`, `claude-docker-bash`, and `claude-docker-npx` are symlinks to
+`claude-docker`, and `codex-docker-build` is a symlink to `claude-docker-build` (either name
+builds the shared image).
+
+### Codex authentication
+
+Both tools share the image but keep separate config/auth. Codex stores everything under
+`~/.codex` (mounted rw), so authenticating once persists across runs.
+
+Use the **device-code** flow to sign in with ChatGPT — the default browser flow binds a
+callback on `localhost:1455` inside the container, which the host browser can't reach:
+
+```bash
+codex-docker login --device-auth   # prints a code + URL to open in your browser
+```
+
+To use an API key instead, uncomment the `-e OPENAI_API_KEY` line in `config` (see
+[Configuration](#configuration)). Note a set `OPENAI_API_KEY` overrides the ChatGPT session.

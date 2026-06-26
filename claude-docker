@@ -14,6 +14,7 @@ fi
 case "$(basename "$0")" in
   claude-docker-npx) CMD=(--entrypoint npx) ;;
   claude-docker-bash) CMD=(--entrypoint bash) ;;
+  codex-docker) CMD=() ; set -- codex "$@" ;;
   *) CMD=() ; set -- claude "$@" ;;
 esac
 
@@ -24,6 +25,7 @@ ALTERNATIVES=()
 # Ensure mount targets exist so Docker doesn't create them as root-owned directories
 [[ -d "$HOME/.claude" ]] || mkdir -p "$HOME/.claude"
 [[ -f "$HOME/.claude.json" ]] || touch "$HOME/.claude.json"
+[[ -d "$HOME/.codex" ]] || mkdir -p "$HOME/.codex"
 
 docker run -it --rm --security-opt no-new-privileges \
   --user "$(id -u):$(id -g)" \
@@ -32,6 +34,7 @@ docker run -it --rm --security-opt no-new-privileges \
   -v "$WORK_ROOT:$WORK_ROOT" \
   -v "$HOME/.claude:$HOME/.claude" \
   -v "$HOME/.claude.json:$HOME/.claude.json" \
+  -v "$HOME/.codex:$HOME/.codex" \
   -v /usr:/usr:ro \
   "${ALTERNATIVES[@]}" \
   "${EXTRA_DOCKER_ARGS[@]}" \
