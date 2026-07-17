@@ -35,6 +35,7 @@ docker run -it --rm --security-opt no-new-privileges \
   -v "$HOME/.claude:$HOME/.claude" \
   -v "$HOME/.claude.json:$HOME/.claude.json" \
   -v "$HOME/.codex:$HOME/.codex" \
+  -v "$HOME/.agents:$HOME/.agents" \
   -v /usr:/usr:ro \
   "${ALTERNATIVES[@]}" \
   "${EXTRA_DOCKER_ARGS[@]}" \
