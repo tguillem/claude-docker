@@ -11,8 +11,8 @@ BASE_ARG="--build-arg BASE_IMAGE=$BASE_IMAGE"
 [[ -f "$SCRIPT_DIR/extra-build.sh" ]] || printf '#!/bin/bash\n' > "$SCRIPT_DIR/extra-build.sh"
 
 if [[ "$1" == "--full" ]]; then
-  docker build --no-cache $USER_ARG $BASE_ARG -t claude-docker "$SCRIPT_DIR"
+  docker --context rootless build --no-cache $USER_ARG $BASE_ARG -t claude-docker "$SCRIPT_DIR"
 else
   VERSION_ARGS="--build-arg CLAUDE_VERSION=$(date +%s) --build-arg CODEX_VERSION=$(date +%s)"
-  docker build $VERSION_ARGS $USER_ARG $BASE_ARG -t claude-docker "$SCRIPT_DIR"
+  docker --context rootless build $VERSION_ARGS $USER_ARG $BASE_ARG -t claude-docker "$SCRIPT_DIR"
 fi

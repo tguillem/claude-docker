@@ -27,9 +27,10 @@ ALTERNATIVES=()
 [[ -f "$HOME/.claude.json" ]] || touch "$HOME/.claude.json"
 [[ -d "$HOME/.codex" ]] || mkdir -p "$HOME/.codex"
 
-docker run -it --rm --security-opt no-new-privileges \
-  --user "$(id -u):$(id -g)" \
+docker --context rootless run -it --rm --security-opt no-new-privileges \
+  --user 0:0 \
   -e HOME="$HOME" \
+  -e IS_SANDBOX=1 \
   -w "$PWD" \
   -v "$WORK_ROOT:$WORK_ROOT" \
   -v "$HOME/.claude:$HOME/.claude" \
